@@ -9,12 +9,10 @@ export function validISBN10(isbn: string): boolean {
         stringArr[9] = '10'
     }
 
-    const numberArray = stringArr.map((element) => {
-        return Number.parseInt(element)
-    }).filter((number) => !isNaN(number) && number !== undefined && number !== null)
+    const numberArray = stringArr.map((element) => Number.parseInt(element)
+    ).filter((number) => !isNaN(number) && number !== undefined && number !== null)
 
     if (numberArray.length !== 10) return false
-
 
     const isbnAcc = numberArray.reduce((acc, curr, index) => {
         acc += curr * (index + 1)
