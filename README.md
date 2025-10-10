@@ -1,9 +1,9 @@
-Hello, 
+# Coding Challenges
 
-Here I will post all my coding challenges doing in my free time. 
+Hello 👋
 
-Hope you will find something helpful here. 
+Here I’ll be sharing all my coding challenges that I work on in my free time.  
+Feel free to explore — I hope you find something helpful or inspiring here!
 
-Cheers and happy codding. 
-
-
+Cheers,  
+and happy coding! 💻
