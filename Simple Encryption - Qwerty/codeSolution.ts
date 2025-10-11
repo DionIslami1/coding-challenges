@@ -1,7 +1,10 @@
-const MAX_KEY_LENGTH = 3
 const sections = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm,.']
+const specialCharacters = ['<', '>']
+
+const MAX_KEY_LENGTH = 3
 
 const keyDigits = (key: number): number[] => key.toString().padStart(MAX_KEY_LENGTH, "0").split('').map(Number)
+
 const isLowerCase = (inputString: string): boolean => inputString === String(inputString).toLowerCase()
 
 const specialChar = (char: string): string => {
@@ -11,17 +14,36 @@ const specialChar = (char: string): string => {
     return char
 }
 
-const checkSections = (section: string[], char: string, keyPosition: number): string | undefined => {
-    if (section.some(el => el === char.toLowerCase())) {
-        const isCharLowerCase = isLowerCase(char)
-        const findIndex = section.findIndex(el => el === char.toLowerCase())
-        const encryptChar = section[(findIndex + keyPosition) % section.length]
+const decryptSpecialChars = (char: string): string => {
+    if (char === '<') return ','
+    if (char === '>') return '.'
 
-        return isCharLowerCase ? encryptChar : specialChar(encryptChar.toUpperCase())
+    return char
+}
+
+const checkSections = (section: string[], char: string, keyPosition: number, isDecrypting = false): string | undefined => {
+    if (section.some(el => el === decryptSpecialChars(char).toLowerCase())) {
+        const isCharLowerCase = isLowerCase(char)
+
+        if (isDecrypting) {
+            const findIndex = section.findIndex(el => el === decryptSpecialChars(char).toLowerCase())
+            const decryptPosition = findIndex - keyPosition
+            const isPositiveNumber = Math.sign(decryptPosition)
+            const position = !!(isPositiveNumber === 1 || isPositiveNumber === 0) ? decryptPosition : decryptPosition + section.length
+            const decryptChar = section[position]
+
+            return isCharLowerCase && !specialCharacters.includes(char) ? decryptChar : specialChar(decryptChar).toUpperCase()
+        }
+
+        const findIndex = section.findIndex(el => el === char.toLowerCase())
+        const encryptPosition = findIndex + keyPosition
+        const encryptChar = section[encryptPosition % section.length]
+
+        return isCharLowerCase ? encryptChar : specialChar(encryptChar).toUpperCase()
     }
 }
 
-export const encrypt = (text: string, key: number): string => {
+const calculate = (text: string, key: number, isDecrypting = false): string => {
     const allSectionLetters: string[] = []
     const accumulation: string[] = []
     const keyNumberArray = keyDigits(key)
@@ -36,15 +58,14 @@ export const encrypt = (text: string, key: number): string => {
     outer: for (let i = 0; i < textArr.length; i++) {
         const char = textArr[i]
 
-        if (!allSectionLetters.some(el => el === char.toLowerCase())) {
-
+        if (!allSectionLetters.some(el => el === decryptSpecialChars(char).toLowerCase())) {
             accumulation.push(char)
             continue
         }
 
         for (let j = 0; j < sections.length; j++) {
             const section = sections[j].split("")
-            const element = checkSections(section, char, keyNumberArray[j])
+            const element = checkSections(section, char, keyNumberArray[j], isDecrypting)
 
             if (element) {
                 accumulation.push(element)
@@ -56,10 +77,8 @@ export const encrypt = (text: string, key: number): string => {
     return accumulation.join('')
 }
 
-export function decrypt(text: string, key: number): string {
-    return ''
-}
+export const encrypt = (text: string, key: number): string => calculate(text, key)
 
-console.log(encrypt("Abc", 212)) //   >fdd
+export const decrypt = (text: string, key: number): string => calculate(text, key, true)
 
-// TODO: decrypt in progress, and refactoring the code
+//TODO: Refactor little bit
