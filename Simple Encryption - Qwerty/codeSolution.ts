@@ -1,103 +1,59 @@
-const firstSection = ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"];
-const secondSection = ["a", "s", "d", "f", "g", "h", "j", "k", "l"];
-const thirdSection = ["z", "x", "c", "v", "b", "n", "m", ",", "."];
+const MAX_KEY_LENGTH = 3
+const sections = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm,.']
 
-const MAX_KEY_LENGTH = 3;
-
-const keyArray = (key: number): number[] => {
-    const keyArray = key.toString().split("").map(Number);
-
-    if (keyArray.length === MAX_KEY_LENGTH) return keyArray;
-
-    const arr = Array.from({ length: MAX_KEY_LENGTH }, () => 0); // [0, 0, 0]
-
-    for (let i = 0; i < MAX_KEY_LENGTH; i++) {
-        const checkPosition = arr.length - keyArray.length + i;
-
-        arr[checkPosition] = keyArray[i];
-
-        if (checkPosition + 1 === MAX_KEY_LENGTH) break;
-    }
-
-    return arr;
-};
-
-function isLowerCase(inputString: string): boolean {
-    return inputString === String(inputString).toLowerCase();
-}
+const keyDigits = (key: number): number[] => key.toString().padStart(MAX_KEY_LENGTH, "0").split('').map(Number)
+const isLowerCase = (inputString: string): boolean => inputString === String(inputString).toLowerCase()
 
 const specialChar = (char: string): string => {
-    if (char === ".") return ">";
-    if (char === ",") return "<";
+    if (char === '.') return '>'
+    if (char === ',') return '<'
 
-    return char;
-};
+    return char
+}
 
-function encrypt(text: string, key: number): string {
-    const keyNumberArray = keyArray(key);
-    const textArr = text.split("");
-    const allSections = [...firstSection, ...secondSection, ...thirdSection];
-    const accumulation: string[] = [];
+const checkSections = (section: string[], char: string, keyPosition: number): string | undefined => {
+    if (section.some(el => el === char.toLowerCase())) {
+        const isCharLowerCase = isLowerCase(char)
+        const findIndex = section.findIndex(el => el === char.toLowerCase())
+        const encryptChar = section[(findIndex + keyPosition) % section.length]
 
-    for (let i = 0; i < textArr.length; i++) {
-        const char = textArr[i];
-        // const keyNumber = keyNumberArray[i % MAX_KEY_LENGTH]
+        return isCharLowerCase ? encryptChar : specialChar(encryptChar.toUpperCase())
+    }
+}
 
-        if (!allSections.some((el) => el === char.toLowerCase())) {
-            accumulation.push(char);
+export const encrypt = (text: string, key: number): string => {
+    const allSectionLetters: string[] = []
+    const accumulation: string[] = []
+    const keyNumberArray = keyDigits(key)
+    const textArr = text.split('')
 
-            continue;
-        }
-
-        if (firstSection.some((el) => el === char.toLowerCase())) {
-            const isCharLowerCase = isLowerCase(char);
-            const findIndex = firstSection.findIndex(
-                (el) => el === char.toLowerCase(),
-            );
-
-            const encryptChar =
-                firstSection[(findIndex + keyNumberArray[0]) % firstSection.length];
-            accumulation.push(
-                isCharLowerCase ? encryptChar : encryptChar.toUpperCase(),
-            );
-
-            continue;
-        }
-
-        if (secondSection.some((el) => el === char.toLowerCase())) {
-            const isCharLowerCase = isLowerCase(char);
-            const findIndex = secondSection.findIndex(
-                (el) => el === char.toLowerCase(),
-            );
-
-            const encryptChar =
-                secondSection[(findIndex + keyNumberArray[1]) % secondSection.length];
-
-            accumulation.push(
-                isCharLowerCase ? encryptChar : encryptChar.toUpperCase(),
-            );
-
-            continue;
-        }
-
-        if (thirdSection.some((el) => el === char.toLowerCase())) {
-            const isCharLowerCase = isLowerCase(char);
-            const findIndex = thirdSection.findIndex(
-                (el) => el === char.toLowerCase(),
-            );
-
-            const encryptChar =
-                thirdSection[(findIndex + keyNumberArray[2]) % thirdSection.length];
-
-            accumulation.push(
-                isCharLowerCase ? encryptChar : specialChar(encryptChar.toUpperCase()),
-            );
-
-            continue;
+    for (const row of sections) {
+        for (const ch of row) {
+            allSectionLetters.push(ch)
         }
     }
 
-    return accumulation.join("");
+    outer: for (let i = 0; i < textArr.length; i++) {
+        const char = textArr[i]
+
+        if (!allSectionLetters.some(el => el === char.toLowerCase())) {
+
+            accumulation.push(char)
+            continue
+        }
+
+        for (let j = 0; j < sections.length; j++) {
+            const section = sections[j].split("")
+            const element = checkSections(section, char, keyNumberArray[j])
+
+            if (element) {
+                accumulation.push(element)
+                continue outer
+            }
+        }
+    }
+
+    return accumulation.join('')
 }
 
 export function decrypt(text: string, key: number): string {
